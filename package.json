@@ -1,0 +1,42 @@
+{
+	"name": "vslack",
+	"displayName": "VSlack",
+	"description": "send snippet or text to slack",
+	"version": "0.0.9",
+	"publisher": "mal097",
+	"engines": {
+		"vscode": "^0.10.6"
+	},
+    "icon": "image/icon.png",
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.VSlack"
+	],
+	"main": "./extension",
+	"contributes": {
+		"commands": [{
+			"command": "extension.VSlack",
+			"title": "VSlack",
+            "description": "send text to slack as snippet or plane text."
+		}],
+        "configuration": {
+            "type": "object",
+            "title": "VSlack configuration",
+            "properties": {
+                "vslack.selfToken": {
+                    "type": "object",
+                    "default": [
+                            "your slack token 1",
+                            "your slack token 2"
+                        ],
+                    "description": "Specify the tokens of your slack team"
+                }
+            }
+        }
+	},
+    "dependencies": {
+		"vscode": "^0.11.0"
+	}
+}
