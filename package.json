@@ -2,8 +2,17 @@
 	"name": "vslack",
 	"displayName": "VSlack",
 	"description": "send snippet or text to slack",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"publisher": "mal097",
+    "homepage": "https://github.com/mal097/vslack/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mal097/vslack"
+    },
+    "bugs": {
+        "url": "https://github.com/mal097/vslack/issues"
+    },
+    "license": "MIT",
 	"engines": {
 		"vscode": "^0.10.6"
 	},
