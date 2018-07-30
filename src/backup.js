@@ -69,7 +69,7 @@ function activate(context) {
                                'members';
                 let preName = url == SLACK_POST_URL + SLACK_API_CHANNELS_LIST? '#':
                                url == SLACK_POST_URL + SLACK_API_GROUP_LIST? '#':
-                               '@balls';
+                               '@';
                 request.post(
                     url, 
                     { form: {"token": token} },

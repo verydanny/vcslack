@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const request = require("request");
+const fp_1 = require("lodash/fp");
 const SLACK_API = {
     post: "https://slack.com/api/",
     file_upload: "files.upload",
@@ -25,9 +26,9 @@ function activate(context) {
                     const data = JSON.parse(body);
                     if (data.team && data.team.name) {
                         state.teamNameObject[data.team.name] = token;
-                    }
-                    if (index === tokens.length - 1) {
-                        selectTeam();
+                        if (index === tokens.length - 1) {
+                            selectTeam();
+                        }
                     }
                 }
             });
@@ -41,11 +42,20 @@ function selectTeam() {
     const teamNames = Object.keys(state.teamNameObject);
     vscode.window.showQuickPick(teamNames, options)
         .then((selectedTeam) => {
+        vscode.window.showQuickPick([], {
+            placeHolder: `Please wait: Loading team ${selectedTeam}`
+        });
         state.selectedTeam = state.teamNameObject[selectedTeam];
         getPostList();
     });
 }
 function getPostList() {
+    const urls = {
+        channels: SLACK_API.post + SLACK_API.channels_list,
+        groups: SLACK_API.post + SLACK_API.groups_list,
+        users: SLACK_API.post + SLACK_API.user_list
+    };
+    console.log(fp_1.map(x => console.log(x), urls));
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

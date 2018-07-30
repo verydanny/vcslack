@@ -1,5 +1,6 @@
 import * as vscode from "vscode"
 import * as request from "request"
+import { map } from 'lodash/fp'
 
 const SLACK_API = {
   post: "https://slack.com/api/",
@@ -40,10 +41,10 @@ export function activate(context: vscode.ExtensionContext) {
 
             if (data.team && data.team.name) {
               state.teamNameObject[data.team.name] = token
-            }
 
-            if ( index === tokens.length - 1 ) {
-              selectTeam()
+              if ( index === tokens.length - 1 ) {
+                selectTeam()
+              }
             }
           }
         }
@@ -60,14 +61,25 @@ function selectTeam() {
 
   vscode.window.showQuickPick(teamNames, options)
     .then(( selectedTeam ) => {
-      state.selectedTeam = state.teamNameObject[ selectedTeam ]
+      vscode.window.showQuickPick([], {
+        placeHolder: `Please wait: Loading team ${ selectedTeam }`
+      })
 
+      state.selectedTeam = state.teamNameObject[ selectedTeam ]
       getPostList()
     })
 }
 
 function getPostList() {
-  
+  const urls = {
+    channels: SLACK_API.post + SLACK_API.channels_list,
+    groups: SLACK_API.post + SLACK_API.groups_list,
+    users: SLACK_API.post + SLACK_API.user_list
+  }
+
+  console.log(
+    map(x => console.log(x), urls)
+  )
 }
 
 exports.activate = activate
