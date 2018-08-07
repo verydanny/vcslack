@@ -67,8 +67,7 @@ const statusMaker = (message: string, timeout: number, icon?: string) => {
 export function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('vcslack')
 
-  // @ts-ignore
-  let disposable = vscode.commands.registerCommand('extension.VCSlack', () => {
+  vscode.commands.registerCommand('extension.VCSlack', () => {
     const tokens: string[] = config.get('selfToken')
     let counter: number = 0
 
