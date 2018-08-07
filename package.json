@@ -63,7 +63,8 @@
     "vscode": "^1.1.18"
   },
   "dependencies": {
-    "request-promise": "^4.2.2",
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.10",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2"
   }
 }
