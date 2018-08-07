@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "engines": {
-    "vscode": "^0.10.6"
+    "vscode": "^1.0.0"
   },
   "icon": "image/icon.png",
   "categories": [
@@ -23,7 +23,7 @@
   "activationEvents": [
     "onCommand:extension.VCSlack"
   ],
-  "main": "./out/extension",
+  "main": "./lib/extension.js",
   "contributes": {
     "commands": [
       {
