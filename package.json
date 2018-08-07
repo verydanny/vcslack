@@ -54,16 +54,16 @@
     "test": "node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.112",
     "@types/mocha": "^5.2.5",
     "@types/request": "^2.47.1",
     "@types/request-promise": "^4.1.42",
-    "lodash": "^4.17.10",
     "mocha": "^5.2.0",
-    "request-promise": "^4.2.2",
     "typescript": "^2.9.2",
     "vscode": "^1.1.18"
   },
   "dependencies": {
-    "@types/lodash": "^4.14.112"
+    "request-promise": "^4.2.2",
+    "lodash": "^4.17.10"
   }
 }
