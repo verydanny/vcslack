@@ -3,20 +3,16 @@
 ## install
 
 Open command palette ([Shift] + [cmmand] + [P]) and select "Extensions: Install Extension".  
-Please type "VSlack" and click install button.
+Please type "VCSlack" and click install button.
 
 ## setting
 Open User Setting (File > Preferences > User Settings) and add 
 ````
-"vslack.selfToken": [
+"vcslack.selfToken": [
     "your slack token 1",
-    "your slack token 2",
-    "your slack token 3"
+    "your slack token 2"
 ],
 ````
-- "your slack token 1"  (required)
-    - You can get the token from https://api.slack.com/web#auth
-- "your slack token 2 ~" (option)
 
 ## use
 Open command palette ([Shift] + [cmmand] + [P]) and select "VSlack".  

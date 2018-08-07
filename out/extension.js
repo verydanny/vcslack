@@ -26,13 +26,19 @@ let state = {
     channelsList: [],
     selectedChannel: undefined
 };
+const statusBaritem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+const statusMaker = (message, timeout, icon) => {
+    statusBaritem.text = `$(${icon ? icon : 'bell'}) ${message}`;
+    statusBaritem.show();
+    return setTimeout(() => statusBaritem.hide(), timeout);
+};
 function activate(context) {
     const config = vscode.workspace.getConfiguration('vcslack');
     // @ts-ignore
     let disposable = vscode.commands.registerCommand('extension.VCSlack', () => {
         const tokens = config.get('selfToken');
         let counter = 0;
-        vscode.window.showInformationMessage("Please wait, loading all Slack teams");
+        statusMaker('Fetching your teams...', 2000);
         tokens.forEach((token, index) => __awaiter(this, void 0, void 0, function* () {
             const data = JSON.parse(yield request.post(`${SLACK_API.post + SLACK_API.team_info}`, { form: { "token": token } }));
             if (data.team && data.team.name) {
@@ -47,68 +53,69 @@ function activate(context) {
 }
 exports.activate = activate;
 function selectTeam() {
-    const options = { placeHolder: "Which team/user would you like to send a snippet to?" };
+    const options = {
+        placeHolder: "Which team/user would you like to send a snippet to?",
+        ignoreFocusOut: false
+    };
     const teamNames = Object.keys(state.teamNameObject);
-    vscode.window.showQuickPick(teamNames, options)
+    return vscode.window.showQuickPick(teamNames, options)
         .then((selectedTeam) => {
-        vscode.window.showQuickPick([], {
-            placeHolder: `Please wait: Loading team ${selectedTeam}`
-        });
-        if (!state.selectedTeam) {
+        if (selectedTeam) {
+            if (!state.selectedTeam) {
+                state.selectedTeam = state.teamNameObject[selectedTeam];
+                return getPostList();
+            }
+            else if (state.selectedTeam === state.teamNameObject[selectedTeam]) {
+                return state.channelsList.length > 1 ? selectChannel() : getPostList();
+            }
             state.selectedTeam = state.teamNameObject[selectedTeam];
             return getPostList();
         }
-        else if (state.selectedTeam === state.teamNameObject[selectedTeam]) {
-            return state.channelsList.length > 1 ? selectChannel() : getPostList();
-        }
-        state.selectedTeam = state.teamNameObject[selectedTeam];
-        return getPostList();
+        return undefined;
     });
 }
 function getPostList() {
-    const urls = {
-        channels: SLACK_API.post + SLACK_API.channels_list,
-        groups: SLACK_API.post + SLACK_API.groups_list,
-        users: SLACK_API.post + SLACK_API.user_list
-    };
-    const form = {
-        form: {
-            "token": state.selectedTeam
-        }
-    };
-    let counter = 0;
-    fp_1.map(url => {
-        request.post(url, form, (err, res, body) => {
-            if (!err && res.statusCode == 200) {
-                const data = JSON.parse(body);
-                if (data.channels) {
-                    state.channelsList = [
-                        ...state.channelsList,
-                        ...data.channels.map((channel) => ({ id: channel.id, label: `#${channel.name}` }))
-                    ];
-                }
-                if (data.members) {
-                    state.channelsList = [
-                        ...state.channelsList,
-                        ...data.members.map((member) => ({ id: member.id, label: `@${member.name}`, description: member.profile.real_name }))
-                    ];
-                }
-                if (data.groups) {
-                    state.channelsList = [
-                        ...state.channelsList,
-                        ...data.groups.map((group) => ({ id: group.id, label: `#${group.name}`, description: group.topic.value }))
-                    ];
-                }
+    return __awaiter(this, void 0, void 0, function* () {
+        const urls = {
+            channels: SLACK_API.post + SLACK_API.channels_list,
+            groups: SLACK_API.post + SLACK_API.groups_list,
+            users: SLACK_API.post + SLACK_API.user_list
+        };
+        const form = {
+            form: {
+                "token": state.selectedTeam
             }
-            counter++;
-            if (counter === Object.keys(urls).length) {
-                selectChannel();
-            }
+        };
+        const postRequest = (url) => __awaiter(this, void 0, void 0, function* () {
+            return yield request.post(url, form, (err, res, body) => {
+                if (!err && res.statusCode == 200) {
+                    const data = JSON.parse(body);
+                    if (data.channels) {
+                        state.channelsList = [
+                            ...state.channelsList,
+                            ...data.channels.map((channel) => ({ id: channel.id, label: `#${channel.name}` }))
+                        ];
+                    }
+                    if (data.members) {
+                        state.channelsList = [
+                            ...state.channelsList,
+                            ...data.members.map((member) => ({ id: member.id, label: `@${member.name}`, description: member.profile.real_name }))
+                        ];
+                    }
+                    if (data.groups) {
+                        state.channelsList = [
+                            ...state.channelsList,
+                            ...data.groups.map((group) => ({ id: group.id, label: `#${group.name}`, description: group.topic.value }))
+                        ];
+                    }
+                }
+            });
         });
-    }, urls);
+        yield Promise.all(fp_1.map(postRequest, urls)).catch((e) => console.log(e));
+        yield selectChannel();
+    });
 }
 function selectChannel() {
-    console.log(state);
     return vscode.window.showQuickPick(state.channelsList, {
         matchOnDescription: true,
         placeHolder: "Please select a channel"
@@ -119,9 +126,36 @@ function selectChannel() {
     });
 }
 function sendData() {
-    const editor = vscode.window.activeTextEditor;
-    const document = editor.document;
-    console.log(document);
+    return __awaiter(this, void 0, void 0, function* () {
+        const editor = vscode.window.activeTextEditor;
+        const document = editor.document;
+        const selection = editor.selection;
+        const filename = document.fileName;
+        const filetype = document.languageId;
+        const text = document.getText(selection) !== '' ? document.getText(selection) :
+            document.getText() !== '' ? document.getText() : false;
+        const data = {
+            "token": state.selectedTeam,
+            "title": "posted from VCSlack",
+            "content": text,
+            "filetype": filetype === 'plaintext' ? 'text' : filetype,
+            "filename": filename ? filename : 'Untitled',
+            "mode": "snippet",
+            "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id
+        };
+        return text ?
+            yield request.post(SLACK_API.post + SLACK_API.file_upload, { form: data }, (err, res, body) => {
+                if (!err && res.statusCode == 200) {
+                    console.log(body);
+                    vscode.window.showInformationMessage("Snippet sent!");
+                }
+                else {
+                    vscode.window.showErrorMessage("Error, couldn't send snippet");
+                }
+            })
+            :
+                vscode.window.showWarningMessage("Warning: Your selection/document appears to be empty");
+    });
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map
