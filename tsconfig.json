@@ -12,7 +12,7 @@
 		"noImplicitAny": true,
 	},
 	"exclude": [
-		"node_modules",
-    "test"
+    "test",
+    "node_modules"
 	]
 }

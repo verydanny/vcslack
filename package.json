@@ -21,15 +21,14 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:extension.VCSlack"
+    "onCommand:vcslack.sendSnippet"
   ],
   "main": "./lib/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "extension.VCSlack",
-        "title": "VCSlack",
-        "description": "send text to slack as snippet or plane text."
+        "command": "vcslack.sendSnippet",
+        "title": "VCSlack: Send Snippet"
       }
     ],
     "configuration": {
@@ -49,7 +48,8 @@
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "node ./node_modules/vscode/bin/test"
   },

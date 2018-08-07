@@ -64,33 +64,30 @@ const statusMaker = (message: string, timeout: number, icon?: string) => {
   return setTimeout(() => statusBaritem.hide(), timeout)
 }
 
-export function activate(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('vcslack')
+//@ts-ignore
+function sendSnippet(config) {
+  const tokens: string[] = config.get('selfToken')
+  let counter: number = 0
 
-  vscode.commands.registerCommand('extension.VCSlack', () => {
-    const tokens: string[] = config.get('selfToken')
-    let counter: number = 0
+  statusMaker('Fetching your teams...', 2000)
 
-    statusMaker('Fetching your teams...', 2000)
+  tokens.forEach( async ( token, index ) => {
+    const data = JSON.parse( await request.post(
+      `${ SLACK_API.post + SLACK_API.team_info}`,
+      { form: { "token": token } },
+    ))
 
-    tokens.forEach( async ( token, index ) => {
-      const data = JSON.parse( await request.post(
-        `${ SLACK_API.post + SLACK_API.team_info}`,
-        { form: { "token": token } },
-      ))
-
-      if (data.team && data.team.name) {
-        state.teamNameObject = {
-          ...state.teamNameObject,
-          [data.team.name]: token
-        }
+    if (data.team && data.team.name) {
+      state.teamNameObject = {
+        ...state.teamNameObject,
+        [data.team.name]: token
       }
+    }
 
-      counter++
-      if ( counter === tokens.length ) {
-        selectTeam()
-      }
-    })
+    counter++
+    if ( counter === tokens.length ) {
+      selectTeam()
+    }
   })
 }
 
@@ -221,4 +218,8 @@ async function sendData() {
     vscode.window.showWarningMessage("Warning: Your selection/document appears to be empty")
 }
 
-exports.activate = activate
+export function activate(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration('vcslack')
+  //@ts-ignore
+  vscode.commands.registerCommand('vcslack.sendSnippet', () => sendSnippet( config ))
+}
