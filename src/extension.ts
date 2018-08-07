@@ -176,9 +176,13 @@ function selectChannel() {
     placeHolder: "Please select a channel"
   })
   .then(( selectedChannel ) => {
-    state.selectedChannel = { ...selectedChannel }
+    if ( selectedChannel ) {
+      state.selectedChannel = { ...selectedChannel }
 
-    sendData()
+      return sendData()
+    }
+
+    return undefined
   })
 }
 
