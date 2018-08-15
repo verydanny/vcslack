@@ -2,7 +2,7 @@
   "name": "vcslack",
   "displayName": "VCSlack",
   "description": "send snippet or text to slack",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "publisher": "verydanny",
   "homepage": "https://github.com/verydanny/vcslack/blob/master/README.md",
   "repository": {
@@ -19,6 +19,20 @@
   "icon": "image/icon.png",
   "categories": [
     "Other"
+  ],
+  "author": {
+    "name": "Daniil Veremchuk",
+    "email": "daniel@verydanny.com",
+    "url": "https://github.com/verydanny/"
+  },
+  "keywords": [
+    "Slack",
+    "chat",
+    "communication",
+    "collaboration",
+    "messenger",
+    "slack snippets",
+    "snippets"
   ],
   "activationEvents": [
     "onCommand:vcslack.sendSnippet"
