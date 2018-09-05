@@ -57,6 +57,34 @@ let state: State = {
   selectedChannel: undefined
 }
 
+async function reloadConfig() {
+  const NEW_CONFIG: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('vcslack')
+  const NEW_TOKENS: string[] = NEW_CONFIG.get('selfToken')
+
+  statusMaker("Fetching New Teams", 500)
+
+  delete state.teamNameObject
+  async function fetchTeams(token: string) {
+    const form = { form: { "token": token } }
+
+    const data = JSON.parse(await request.post(
+      `${ SLACK_API.post + SLACK_API.team_info}`,
+      form
+    ))
+
+    if (data.team && data.team.name) {
+      state.teamNameObject = {
+        ...state.teamNameObject,
+        [data.team.name]: token
+      }
+    }
+  }
+  
+  await Promise.all(
+    map(fetchTeams, NEW_TOKENS)
+  ).catch((e: any) => console.log(e))
+}
+
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('vcslack')
   const tokens: string[] = config.get('selfToken')
@@ -66,8 +94,10 @@ export async function activate(context: vscode.ExtensionContext) {
     map(fetchTeams, tokens)
   ).catch((e: any) => console.log(e))
 
-  // Prefetch the teams
-  vscode.commands.registerCommand('vcslack.sendSnippet', () => selectTeam())
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vcslack.sendSnippet', () => selectTeam()),
+    vscode.workspace.onDidChangeConfiguration(() => reloadConfig()),
+  )
 }
 
 async function fetchTeams(token: string) {
