@@ -2,7 +2,7 @@
   "name": "vcslack",
   "displayName": "VCSlack",
   "description": "send snippet or text to slack",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "publisher": "verydanny",
   "homepage": "https://github.com/verydanny/vcslack/blob/master/README.md",
   "repository": {
@@ -68,17 +68,17 @@
     "test": "node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.112",
+    "@types/lodash": "^4.14.116",
     "@types/mocha": "^5.2.5",
     "@types/request": "^2.47.1",
     "@types/request-promise": "^4.1.42",
     "mocha": "^5.2.0",
-    "typescript": "^2.9.2",
-    "vscode": "^1.1.18"
+    "typescript": "^3.0.3",
+    "vscode": "^1.1.21"
   },
   "dependencies": {
-    "lodash": "^4.17.10",
-    "request": "^2.87.0",
+    "lodash": "^4.17.11",
+    "request": "^2.88.0",
     "request-promise": "^4.2.2"
   }
 }

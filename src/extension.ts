@@ -216,11 +216,24 @@ async function sendData() {
   const text = document.getText(selection) !== '' ? document.getText(selection) :
     document.getText() !== '' ? document.getText() : false
 
+  // Adjust vscode filetypes to slack API
+  let adjustedFiletype
+  switch (filetype) {
+    case 'plaintext':
+      adjustedFiletype = 'text'
+      break
+    case 'scss':
+      adjustedFiletype = 'sass'
+      break
+    default:
+      adjustedFiletype = filetype
+  }
+
   const data = {
     "token": state.selectedTeam,
     "title": "posted from VCSlack",
     "content": text,
-    "filetype": filetype === 'plaintext' ? 'text' : filetype,
+    "filetype": adjustedFiletype,
     "filename": filename ? filename : 'Untitled',
     "mode": "snippet",
     "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id
