@@ -14,6 +14,15 @@ const SLACK_API = {
   user_list: "users.list"
 }
 
+type DataT = {
+  token?: string,
+  channels?: string,
+  content?: string | boolean,
+  filename?: string,
+  filetype: string,
+  title: string
+}
+
 type Channel = {
   id: string,
   name: string
@@ -211,13 +220,14 @@ async function sendData() {
   const editor = vscode.window.activeTextEditor
   const document = editor.document
   const selection = editor.selection
-  const filename = document.fileName
+  const filenameWithPath = document.fileName
   const filetype = document.languageId
   const text = document.getText(selection) !== '' ? document.getText(selection) :
     document.getText() !== '' ? document.getText() : false
 
   // Adjust vscode filetypes to slack API
   let adjustedFiletype
+  let filename
   switch (filetype) {
     case 'plaintext':
       adjustedFiletype = 'text'
@@ -225,25 +235,34 @@ async function sendData() {
     case 'scss':
       adjustedFiletype = 'sass'
       break
+    case 'typescriptreact':
+      adjustedFiletype = 'javascript'
+      break
     default:
       adjustedFiletype = filetype
   }
 
-  const data = {
+  if(filenameWithPath.indexOf('\\') !== -1) {
+    filename = filenameWithPath.substring(filenameWithPath.lastIndexOf('\\') + 1)
+  } else {
+    filename = filenameWithPath.substring(filenameWithPath.lastIndexOf('/') + 1)
+  }
+
+  let data: DataT = {
     "token": state.selectedTeam,
-    "title": "posted from VCSlack",
+    "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id,
     "content": text,
+    "filename": filename !== 'Untitled-1' ? filename : 'Untitled-1.txt',
     "filetype": adjustedFiletype,
-    "filename": filename ? filename : 'Untitled',
-    "mode": "snippet",
-    "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id
+    "title": `${filename} sent from VCSlack`,
   }
 
   return text ?
     await request.post(
       SLACK_API.post + SLACK_API.file_upload,
-      { form: data },
+      { formData: data },
       (err, res, body) => {
+        console.log(res)
         if (!err && res.statusCode == 200) {
           vscode.window.showInformationMessage("Snippet sent!")
         } else {
