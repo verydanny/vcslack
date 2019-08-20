@@ -226,8 +226,13 @@ async function sendData() {
     document.getText() !== '' ? document.getText() : false
 
   // Adjust vscode filetypes to slack API
-  let adjustedFiletype
-  let filename
+  let { adjustedFiletype, actualFilename, filename }: { adjustedFiletype?: string, actualFilename?: string, filename?: string } = {
+    adjustedFiletype: undefined,
+    actualFilename: undefined,
+    filename: undefined
+  }
+
+  console.log('Filetype', filetype)
   switch (filetype) {
     case 'plaintext':
       adjustedFiletype = 'text'
@@ -235,8 +240,12 @@ async function sendData() {
     case 'scss':
       adjustedFiletype = 'sass'
       break
+    case 'javascriptreact':
+      adjustedFiletype = 'jsx'
+      break
     case 'typescriptreact':
-      adjustedFiletype = 'javascript'
+      adjustedFiletype = 'jsx'
+      actualFilename = 'tsx'
       break
     default:
       adjustedFiletype = filetype
@@ -248,11 +257,15 @@ async function sendData() {
     filename = filenameWithPath.substring(filenameWithPath.lastIndexOf('/') + 1)
   }
 
+  if (filenameWithPath === 'Untitled-1') {
+    filename = `${filenameWithPath}.${actualFilename ? actualFilename : adjustedFiletype}`
+  }
+
   let data: DataT = {
     "token": state.selectedTeam,
     "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id,
     "content": text,
-    "filename": filename !== 'Untitled-1' ? filename : 'Untitled-1.txt',
+    "filename": filename,
     "filetype": adjustedFiletype,
     "title": `${filename} sent from VCSlack`,
   }
@@ -262,7 +275,6 @@ async function sendData() {
       SLACK_API.post + SLACK_API.file_upload,
       { formData: data },
       (err, res, body) => {
-        console.log(res)
         if (!err && res.statusCode == 200) {
           vscode.window.showInformationMessage("Snippet sent!")
         } else {
