@@ -37,6 +37,9 @@
   "activationEvents": [
     "onCommand:vcslack.sendSnippet"
   ],
+  "files": [
+    "./lib"
+  ],
   "main": "./lib/extension.js",
   "contributes": {
     "commands": [
@@ -68,17 +71,17 @@
     "test": "node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.116",
-    "@types/mocha": "^5.2.5",
-    "@types/request": "^2.47.1",
-    "@types/request-promise": "^4.1.42",
-    "mocha": "^5.2.0",
-    "typescript": "^3.0.3",
-    "vscode": "^1.1.21"
+    "@types/lodash": "^4.14.137",
+    "@types/mocha": "^5.2.7",
+    "@types/request": "^2.48.2",
+    "@types/request-promise": "^4.1.44",
+    "mocha": "^6.2.0",
+    "typescript": "^3.5.3",
+    "vscode": "^1.1.36"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.15",
     "request": "^2.88.0",
-    "request-promise": "^4.2.2"
+    "request-promise": "^4.2.4"
   }
 }
