@@ -278,8 +278,9 @@ async function sendData() {
 
   if (workspaceFolder && workspaceFolder.name) {
     relativePathFull = `Workspace: ${workspaceFolder.name} Path: ${relativePath}`
+  } else {
+    relativePathFull = `Path: ${relativePath}`
   }
-  relativePathFull = `Path: ${relativePath}`
 
   let data: DataT = {
     "token": state.selectedTeam,
