@@ -237,17 +237,15 @@ async function sendData() {
   const filetype = document.languageId
   const text = document.getText(selection) !== '' ? document.getText(selection) :
     document.getText() !== '' ? document.getText() : false
-
-  const relativePath = vscode.workspace.asRelativePath(editor.document.uri)
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri)
-
-  console.log('Workspace folder', workspaceFolder)
+  const relativePath = vscode.workspace.asRelativePath(editor.document.uri)
 
   // Adjust vscode filetypes to slack API
-  let { adjustedFiletype, actualFilename, filename }: { adjustedFiletype?: string, actualFilename?: string, filename?: string } = {
+  let { adjustedFiletype, actualFilename, filename, relativePathFull }: { adjustedFiletype?: string, actualFilename?: string, filename?: string, relativePathFull?: string } = {
     adjustedFiletype: undefined,
     actualFilename: undefined,
-    filename: undefined
+    filename: undefined,
+    relativePathFull: undefined
   }
 
   switch (filetype) {
@@ -278,13 +276,18 @@ async function sendData() {
     filename = `${filenameWithPath}.${actualFilename ? actualFilename : adjustedFiletype}`
   }
 
+  if (workspaceFolder && workspaceFolder.name) {
+    relativePathFull = `Workspace: ${workspaceFolder.name} Path: ${relativePath}`
+  }
+  relativePathFull = `Path: ${relativePath}`
+
   let data: DataT = {
     "token": state.selectedTeam,
     "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id,
     "content": text,
     "filename": filename,
     "filetype": adjustedFiletype,
-    "title": relativePath === 'Untitled-1' ? `${filename} sent from VCSlack` : `${relativePath} sent from VCSlack`
+    "title": relativePath === 'Untitled-1' ? `${filename} sent from VCSlack` : `${relativePathFull} sent from VCSlack`
   }
 
   return text ?
