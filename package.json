@@ -80,7 +80,7 @@
     "vscode": "^1.1.36"
   },
   "dependencies": {
-    "lodash": "^4.17.15",
+    "rambda": "^3.0.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4"
   }

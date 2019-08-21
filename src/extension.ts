@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import * as request from "request-promise"
-import { map } from "lodash/fp"
+import { map } from "rambda"
 
 import { statusMaker } from './utils'
 
@@ -98,14 +98,13 @@ export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('vcslack')
   const tokens: string[] = config.get('selfToken')
 
-  statusMaker("Fetching Teams", 500)
   await Promise.all(
     map(fetchTeams, tokens)
-  ).catch((e: any) => console.log(e))
+  ).catch((e) => console.log(e))
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('vcslack.sendSnippet', () => selectTeam()),
-    vscode.workspace.onDidChangeConfiguration(() => reloadConfig()),
+    vscode.commands.registerCommand('vcslack.sendSnippet', selectTeam),
+    vscode.workspace.onDidChangeConfiguration(reloadConfig),
   )
 }
 
@@ -125,17 +124,21 @@ async function fetchTeams(token: string) {
   }
 }
 
-function selectTeam() {
+async function selectTeam() {
+  if (typeof vscode.window.activeTextEditor === 'undefined') {
+    return vscode.window.showErrorMessage("Can't send snippet with no open code document!")
+  }
+
   const options = {
     placeHolder: "Which team/user would you like to send a snippet to?",
     ignoreFocusOut: false
   }
-  const teamNames = Object.keys( state.teamNameObject )
+  const teamNames = Object.keys(state.teamNameObject)
 
   return vscode.window.showQuickPick(teamNames, options)
-    .then(( selectedTeam ) => {
+    .then((selectedTeam) => {
       if (selectedTeam) {
-        state.selectedTeam = state.teamNameObject[ selectedTeam ]
+        state.selectedTeam = state.teamNameObject[selectedTeam]
 
         return getPostList()
       }
@@ -149,7 +152,7 @@ async function getPostList() {
     channels: SLACK_API.post + SLACK_API.channels_list,
     groups: SLACK_API.post + SLACK_API.groups_list,
     users: SLACK_API.post + SLACK_API.user_list
-  }  
+  }
 
   const form = {
     form: {
@@ -194,13 +197,13 @@ async function getPostList() {
     })
 
   await Promise.all(
-    map( postRequest, urls )
-  ).catch((e) => console.log(e))
+    map(postRequest, Object.values(urls))
+  ).catch((e: any) => console.log(e))
 
   await selectChannel()
 }
 
-function selectChannel() {
+async function selectChannel() {
   return vscode.window.showQuickPick(state.channelsList, {
     matchOnDescription: true,
     placeHolder: "Please select a channel"
@@ -232,7 +235,6 @@ async function sendData() {
     filename: undefined
   }
 
-  console.log('Filetype', filetype)
   switch (filetype) {
     case 'plaintext':
       adjustedFiletype = 'text'
