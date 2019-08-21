@@ -68,7 +68,11 @@ let state: State = {
 
 async function reloadConfig() {
   const NEW_CONFIG: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('vcslack')
-  const NEW_TOKENS: string[] = NEW_CONFIG.get('selfToken')
+  const NEW_TOKENS: string[] | undefined = NEW_CONFIG.get('selfToken')
+
+  if (!NEW_TOKENS) {
+    return vscode.window.showErrorMessage('Please add a Slack legacy token before proceeding')
+  }
 
   statusMaker("Fetching New Teams", 500)
 
@@ -89,18 +93,20 @@ async function reloadConfig() {
     }
   }
   
-  await Promise.all(
+  return Promise.all(
     map(fetchTeams, NEW_TOKENS)
   ).catch((e: any) => console.log(e))
 }
 
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('vcslack')
-  const tokens: string[] = config.get('selfToken')
+  const tokens: string[] | undefined = config.get('selfToken')
 
-  await Promise.all(
-    map(fetchTeams, tokens)
-  ).catch((e) => console.log(e))
+  if (tokens) {
+    await Promise.all(
+      map(fetchTeams, tokens)
+    ).catch((e) => console.log(e))
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand('vcslack.sendSnippet', selectTeam),
@@ -220,6 +226,10 @@ async function selectChannel() {
 }
 
 async function sendData() {
+  if (!vscode.window.activeTextEditor) {
+    return
+  }
+
   const editor = vscode.window.activeTextEditor
   const document = editor.document
   const selection = editor.selection
@@ -227,6 +237,11 @@ async function sendData() {
   const filetype = document.languageId
   const text = document.getText(selection) !== '' ? document.getText(selection) :
     document.getText() !== '' ? document.getText() : false
+
+  const relativePath = vscode.workspace.asRelativePath(editor.document.uri)
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri)
+
+  console.log('Workspace folder', workspaceFolder)
 
   // Adjust vscode filetypes to slack API
   let { adjustedFiletype, actualFilename, filename }: { adjustedFiletype?: string, actualFilename?: string, filename?: string } = {
@@ -269,7 +284,7 @@ async function sendData() {
     "content": text,
     "filename": filename,
     "filetype": adjustedFiletype,
-    "title": `${filename} sent from VCSlack`,
+    "title": relativePath === 'Untitled-1' ? `${filename} sent from VCSlack` : `${relativePath} sent from VCSlack`
   }
 
   return text ?
