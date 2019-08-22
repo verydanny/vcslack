@@ -1,6 +1,8 @@
 .vscode/**
 typings/**
 test/**
+node_modules
 .gitignore
 jsconfig.json
+webpack.config.js
 vsc-extension-quickstart.md

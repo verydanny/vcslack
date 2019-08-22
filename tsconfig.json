@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es6",
+		"module": "esnext",
+		"target": "es2015",
 		"outDir": "lib",
 		"lib": ["esnext"],
 		"sourceMap": true,
@@ -12,10 +12,12 @@
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 		"skipDefaultLibCheck": true,
-		"strictFunctionTypes": false
+		"strictFunctionTypes": false,
+		"esModuleInterop": true,
+		"moduleResolution": "node",
 	},
 	"exclude": [
-	"node_modules",
+		"node_modules",
     "test",
 	]
 }
