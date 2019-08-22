@@ -1,8 +1,6 @@
 import * as vscode from "vscode"
-import * as request from "request-promise"
-import { map } from "rambda"
-
-import { statusMaker } from './utils'
+import * as request from "request-promise-native"
+import { pipe, resolve, mapAsync } from "rambdax"
 
 const SLACK_API = {
   post: "https://slack.com/api/",
@@ -44,77 +42,28 @@ type Group = {
   }
 }
 
-interface ChannelListT extends vscode.QuickPickItem {
-  id: string
+interface ChannelList {
+  id?: string
+  label?: string
+  description?: string
+}
+
+interface Team {
+  token: string
+  name: string
+  channelList: ChannelList[]
 }
 
 interface State {
-  teamNameObject: {
-    [key: string]: string
-  },
-  selectedTeam?: string,
-  channelsList: Array<ChannelListT>,
-  selectedChannel?: ChannelListT
+  tokens?: string | string[]
+  teams: Team[]
 }
 
-let state: State = {
-  teamNameObject: {
-
-  },
-  selectedTeam: undefined,
-  channelsList: [],
-  selectedChannel: undefined
+let State: State = {
+  teams: []
 }
 
-async function reloadConfig() {
-  const NEW_CONFIG: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('vcslack')
-  const NEW_TOKENS: string[] | undefined = NEW_CONFIG.get('selfToken')
-
-  if (!NEW_TOKENS) {
-    return vscode.window.showErrorMessage('Please add a Slack legacy token before proceeding')
-  }
-
-  statusMaker("Fetching New Teams", 500)
-
-  delete state.teamNameObject
-  async function fetchTeams(token: string) {
-    const form = { form: { "token": token } }
-
-    const data = JSON.parse(await request.post(
-      `${ SLACK_API.post + SLACK_API.team_info}`,
-      form
-    ))
-
-    if (data.team && data.team.name) {
-      state.teamNameObject = {
-        ...state.teamNameObject,
-        [data.team.name]: token
-      }
-    }
-  }
-  
-  return Promise.all(
-    map(fetchTeams, NEW_TOKENS)
-  ).catch((e: any) => console.log(e))
-}
-
-export async function activate(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('vcslack')
-  const tokens: string[] | undefined = config.get('selfToken')
-
-  if (tokens) {
-    await Promise.all(
-      map(fetchTeams, tokens)
-    ).catch((e) => console.log(e))
-  }
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand('vcslack.sendSnippet', selectTeam),
-    vscode.workspace.onDidChangeConfiguration(reloadConfig),
-  )
-}
-
-async function fetchTeams(token: string) {
+const fetchTeams = async (token: string) => {
   const form = { form: { "token": token } }
 
   const data = JSON.parse(await request.post(
@@ -122,12 +71,55 @@ async function fetchTeams(token: string) {
     form
   ))
 
-  if (data.team && data.team.name) {
-    state.teamNameObject = {
-      ...state.teamNameObject,
-      [data.team.name]: token
+  if (data && data.team && data.team.name) {
+    return {
+      name: data.team.name,
+      token: token
     }
   }
+
+  return
+}
+
+const buildTeamData = pipe(
+  mapAsync(fetchTeams),
+  resolve(
+    mapAsync(getPostList)
+  )
+) as (x: any[]) => Promise<Team[]>
+
+async function reloadConfig() {
+  const NEW_CONFIG: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration('vcslack')
+  const NEW_TOKENS: string[] | undefined = NEW_CONFIG.get('selfToken')
+
+  if (!NEW_TOKENS) {
+    vscode.window.showErrorMessage('VCSlack: Please add a Slack legacy token before proceeding')
+  } else {
+    State = {
+      ...State,
+      teams: await buildTeamData([...NEW_TOKENS])
+    }
+  }
+}
+
+export async function activate(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration('vcslack')
+  const tokens: string[] | undefined = config.get('selfToken')
+
+  if (!tokens) {
+    vscode.window.showErrorMessage('VCSlack: You should probably add some Slack tokens!')
+  } else {
+    State = {
+      ...State,
+      tokens,
+      teams: await buildTeamData([...tokens])
+    }
+  }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vcslack.sendSnippet', selectTeam),
+    vscode.workspace.onDidChangeConfiguration(reloadConfig),
+  )
 }
 
 async function selectTeam() {
@@ -139,93 +131,114 @@ async function selectTeam() {
     placeHolder: "Which team/user would you like to send a snippet to?",
     ignoreFocusOut: false
   }
-  const teamNames = Object.keys(state.teamNameObject)
 
-  return vscode.window.showQuickPick(teamNames, options)
-    .then((selectedTeam) => {
-      if (selectedTeam) {
-        state.selectedTeam = state.teamNameObject[selectedTeam]
-
-        return getPostList()
-      }
-
-      return undefined
-    })
-}
-
-async function getPostList() {
-  const urls = {
-    channels: SLACK_API.post + SLACK_API.channels_list,
-    groups: SLACK_API.post + SLACK_API.groups_list,
-    users: SLACK_API.post + SLACK_API.user_list
+  if (State && !State.tokens) {
+    return vscode.window.showErrorMessage('VCSlack: Please add a Slack legacy token before proceeding')
   }
 
+  if (State && State.teams.length > 0) {
+    const names = State.teams.filter(x => x && x.name).map(x => x.name).concat(['Missing Team? Reload VCSlack Teams'])
+
+    return vscode.window.showQuickPick(names, options).then(selectChannel)
+  }
+
+  if (State && State.tokens && State.teams.length === 0) {
+    State = {
+      ...State,
+      teams: await buildTeamData([...State.tokens])
+    }
+
+    const names = State.teams.filter(x => x && x.name).map(x => x.name).concat(['Missing Team? Reload VCSlack Teams'])
+
+    return vscode.window.showQuickPick(names, options).then(selectChannel)
+  }
+
+  return
+}
+
+const organizeUserInfo = (body: string) => {
+  if (body) {
+    const data = JSON.parse(body)
+
+    if (data && data.channels) {
+      return data.channels.map(( channel: Channel ) => ({
+        id: channel.id,
+        label: `#${channel.name}`
+      }))
+    }
+
+    if (data.members) {
+      return data.members.map(( member: Member ) => ({
+        id: member.id,
+        label: `@${ member.name }`, description: member.profile.real_name
+      }))
+    }
+
+    if (data.groups) {
+      return data.groups.map(( group: Group ) => ({
+        id: group.id,
+        label: `#${group.name}`,
+        description: group.topic.value
+      }))
+    }
+  }
+}
+
+async function getPostList({ name, token }: { name: string, token: string }) {
+  const channels = SLACK_API.post + SLACK_API.channels_list
+  const groups = SLACK_API.post + SLACK_API.groups_list
+  const users = SLACK_API.post + SLACK_API.user_list
   const form = {
     form: {
-      "token": state.selectedTeam
+      "token": token
     }
   }
 
-  state.channelsList = []
-
-  const postRequest = async ( url: string ) =>
-    await request.post(url, form, (err, res, body) => {
-      if (!err && res.statusCode == 200) {
-        const data = JSON.parse(body)
-
-        if (data.channels) {
-          state.channelsList = [
-            ...state.channelsList,
-            ...data.channels.map(( channel: Channel ) => 
-              ({ id: channel.id, label: `#${channel.name}` })
-            )
-          ]
-        }
-
-        if (data.members) {
-          state.channelsList = [
-            ...state.channelsList,
-            ...data.members.map(( member: Member ) => 
-              ({ id: member.id, label: `@${ member.name }`, description: member.profile.real_name })
-            )
-          ]
-        }
-
-        if (data.groups) {
-          state.channelsList = [
-            ...state.channelsList,
-            ...data.groups.map(( group: Group ) =>
-              ({ id: group.id, label: `#${group.name}`, description: group.topic.value })
-            )
-          ]
-        }
-      }
-    })
-
-  await Promise.all(
-    map(postRequest, Object.values(urls))
-  ).catch((e: any) => console.log(e))
-
-  await selectChannel()
+  return {
+    name,
+    token,
+    channelList: (await Promise.all(
+      [ channels, groups, users ].map(async url => await request.post(url, form)
+        .then(organizeUserInfo)
+        .catch(e => vscode.window.showErrorMessage(e))
+      )
+    )).flat()
+  }
 }
 
-async function selectChannel() {
-  return vscode.window.showQuickPick(state.channelsList, {
-    matchOnDescription: true,
-    placeHolder: "Please select a channel"
-  })
-  .then(( selectedChannel ) => {
-    if ( selectedChannel ) {
-      state.selectedChannel = { ...selectedChannel }
-
-      return sendData()
+async function selectChannel(selectedChannel: string): Promise<any> {
+  if (selectedChannel === 'Missing Team? Reload VCSlack Teams' && State.tokens) {
+    State = {
+      ...State,
+      teams: await buildTeamData([...State.tokens])
     }
 
-    return undefined
-  })
+    return selectTeam()
+  }
+
+  if (State && State.teams.length > 0) {
+    const [ matchingTeam ] = State.teams.filter(x => x.name === selectedChannel)
+
+    if (matchingTeam && matchingTeam.channelList) {
+      const channelList = matchingTeam.channelList.map(({ label, description, id }) => ({
+        label: label ? label : 'Unknown',
+        description,
+        id
+      }))
+
+      return vscode.window.showQuickPick(channelList, {
+        matchOnDescription: true,
+        placeHolder: "Please select a Slack channel"
+      }).then((matchingChannel) => matchingChannel && sendData(matchingChannel, matchingTeam))
+    }
+
+    return
+  }
+
+  return
 }
 
-async function sendData() {
+async function sendData(matchingChannel: ChannelList, matchingTeam: Team) {
   if (!vscode.window.activeTextEditor) {
     return
   }
@@ -283,8 +296,8 @@ async function sendData() {
   }
 
   let data: DataT = {
-    "token": state.selectedTeam,
-    "channels": (state.selectedChannel && state.selectedChannel.id) && state.selectedChannel.id,
+    "token": matchingTeam.token,
+    "channels": matchingChannel && matchingChannel.id,
     "content": text,
     "filename": filename,
     "filetype": adjustedFiletype,

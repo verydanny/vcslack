@@ -11,7 +11,8 @@
 		"noUnusedLocals": true,
 		"noImplicitAny": true,
 		"skipLibCheck": true,
-		"skipDefaultLibCheck": true
+		"skipDefaultLibCheck": true,
+		"strictFunctionTypes": false
 	},
 	"exclude": [
 	"node_modules",

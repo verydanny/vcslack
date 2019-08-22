@@ -35,6 +35,7 @@
     "snippets"
   ],
   "activationEvents": [
+    "*",
     "onCommand:vcslack.sendSnippet"
   ],
   "files": [
@@ -75,13 +76,14 @@
     "@types/mocha": "^5.2.7",
     "@types/request": "^2.48.2",
     "@types/request-promise": "^4.1.44",
+    "@types/request-promise-native": "^1.0.16",
     "mocha": "^6.2.0",
     "typescript": "^3.5.3",
     "vscode": "^1.1.36"
   },
   "dependencies": {
-    "rambda": "^3.0.0",
+    "rambdax": "^2.12.3",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "request-promise-native": "^1.0.7"
   }
 }
