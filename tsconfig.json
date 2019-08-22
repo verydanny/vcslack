@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"module": "esnext",
-		"target": "es2015",
+		"target": "esnext",
 		"outDir": "lib",
 		"lib": ["esnext"],
 		"sourceMap": true,

@@ -65,11 +65,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production",
-    "test-compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "webpack-prod": "webpack --mode production",
-    "webpack-dev": "webpack --mode development --watch",
+    "vscode:prepublish": "rm -r lib && yarn webpack --mode production",
+    "test-compile": "rm -r lib && tsc -p ./",
+    "watch": "rm -r lib && tsc -watch -p ./",
+    "webpack-prod": "rm -r lib && webpack --mode production",
+    "webpack-dev": "rm -r lib && webpack --mode development --watch",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "node ./node_modules/vscode/bin/test",
     "lint": "eslint src/**/* --ignore-pattern src/**/*.d.ts"
