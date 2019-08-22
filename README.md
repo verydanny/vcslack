@@ -3,7 +3,9 @@
 ## Features
 
 - [x] Automatic sending of file/or highlighted text
-- [x] Language support
+- [x] Syntax Highlighting in Slack
+- [x] Fast! Cached in VSCode on every load
+- [x] Selection sending or whole document sending
 
 ## Install
 
