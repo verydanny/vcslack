@@ -27,4 +27,4 @@ Open User Setting (File > Preferences > User Settings) and add
 ## Use
 Open command palette ([Shift] + [cmmand] + [P]) and select "VCSlack".  
 Select Slack team and channel or user.  
-Send current file or selected text as snnipets or plain text.
+Send current file or selected text as snippets or plain text.
