@@ -68,7 +68,8 @@
     "webpack-dev": "rm -r lib && webpack --mode development --watch",
     "postinstall": "node ./node_modules/vscode/bin/install",
     "test": "node ./node_modules/vscode/bin/test",
-    "lint": "eslint src/**/* --ignore-pattern src/**/*.d.ts"
+    "lint": "eslint src/**/* --ignore-pattern src/**/*.d.ts",
+    "eslint-check": "eslint --print-config path/to/main.js | eslint-config-prettier-check"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.137",
