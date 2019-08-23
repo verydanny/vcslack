@@ -1,5 +1,7 @@
 import { SlackFileTypes } from './types/vcslack'
 
+export const defaultTokens = ['your slack token 1', 'your slack token 2']
+
 export const filetypeMap: SlackFileTypes = {
   plaintext: {
     slackCompatible: 'text'
