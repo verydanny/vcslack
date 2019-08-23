@@ -21,3 +21,5 @@ export const activate = async (context: vscode.ExtensionContext) => {
     vscode.workspace.onDidChangeConfiguration(() => reloadConfig(context))
   )
 }
+
+export const deactivate = () => {}
