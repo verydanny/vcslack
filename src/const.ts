@@ -2,6 +2,38 @@ import { SlackFileTypes } from './types/vcslack'
 
 export const defaultTokens = ['your slack token 1', 'your slack token 2']
 
+export const checkTokenPleaseError = `
+  VCSlack Error: Could not fetch Slack teams. Please check your token
+`
+
+export const legacyTokenError = `
+  VCSlack Error: Please add a Slack legacy token before proceeding,
+  README: https://github.com/verydanny/vcslack/blob/master/README.md
+`
+
+export const legacyTokenHelpfulError = `
+  VCSlack Error: You should probably add some Slack tokens!
+    1. Go to settings
+    2. Search for "vcslack"
+    3. Click edit in settings.json
+    4. Add VCSlack setting in following format:
+      "vcslack.selfToken": [
+        "xoxp-358484..."
+      ]
+  `
+
+export const noOpenDocumentError = `
+  VCSlack Error: Can't send snippet with no open code document!
+`
+
+export const noSelectionOrDocument = `
+  VCSlack Error: Your selection/document appears to be empty
+`
+
+export const noChannelId = `
+  VCSlack Error: The channel/user you selected seems to be invalid
+`
+
 export const filetypeMap: SlackFileTypes = {
   plaintext: {
     slackCompatible: 'text'

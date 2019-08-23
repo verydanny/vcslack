@@ -2,6 +2,11 @@ import * as vscode from 'vscode'
 import phin from 'phin'
 import { pipe, resolve, mapAsync } from 'rambdax'
 import { getText, buildFilename } from './utils'
+import {
+  noSelectionOrDocument,
+  noChannelId,
+  checkTokenPleaseError
+} from './const'
 
 import {
   Team,
@@ -42,7 +47,7 @@ export const fetchTeams = async (token: string) => {
     }
   }
 
-  return
+  return vscode.window.showErrorMessage(checkTokenPleaseError)
 }
 
 const organizeUserInfo = (data: any) => {
@@ -50,23 +55,38 @@ const organizeUserInfo = (data: any) => {
     if (data && data.channels) {
       return data.channels.map((channel: Channel) => ({
         id: channel.id,
-        label: `#${channel.name}`
+        label: 'channel:',
+        detail:
+          channel.purpose && channel.purpose.value ? channel.purpose.value : '',
+        description: `#${channel.name}`
       }))
     }
 
     if (data.members) {
       return data.members.map((member: Member) => ({
         id: member.id,
-        label: `@${member.name}`,
-        description: member.profile.real_name
+        label: 'user:',
+        detail:
+          member.profile && member.profile.real_name
+            ? member.profile.real_name
+            : member.real_name
+            ? member.real_name
+            : member.name,
+        description: `@${member.name}`
       }))
     }
 
     if (data.groups) {
       return data.groups.map((group: Group) => ({
         id: group.id,
-        label: `#${group.name}`,
-        description: group.topic.value
+        label: 'group:',
+        detail:
+          group.purpose && group.purpose.value
+            ? group.purpose.value
+            : group.topic && group.topic.value
+            ? group.topic.value
+            : group.name,
+        description: `#${group.name}`
       }))
     }
   }
@@ -132,13 +152,12 @@ export const sendData = async (
   const { selection, document } = vscode.window.activeTextEditor
   const { fileName: filenameWithPath, languageId: filetype } = document
   const content = getText(selection, document.getText)
-  const channels =
-    matchingChannel && matchingChannel.id ? matchingChannel.id : ''
+  const channels = matchingChannel && matchingChannel.id
 
   if (!content) {
-    return vscode.window.showWarningMessage(
-      'Warning: Your selection/document appears to be empty'
-    )
+    return vscode.window.showErrorMessage(noSelectionOrDocument)
+  } else if (!channels) {
+    return vscode.window.showErrorMessage(noChannelId)
   }
 
   const filedetails = buildFilename(
@@ -146,7 +165,7 @@ export const sendData = async (
     filenameWithPath,
     document
   )
-
+  const url = SLACK_API.post + SLACK_API.fileUpload
   const data: DataT = {
     token,
     channels,
@@ -159,7 +178,7 @@ export const sendData = async (
   }
 
   return phin({
-    url: SLACK_API.post + SLACK_API.fileUpload,
+    url,
     form: data,
     method: 'POST',
     parse: 'json'
@@ -169,7 +188,7 @@ export const sendData = async (
       if (e) {
         vscode.window
           .showErrorMessage(
-            'Error sending snippet, Report Issues: https://github.com/verydanny/vcslack/issues',
+            `Error sending snippet to ${url}, Report Issues: https://github.com/verydanny/vcslack/issues`,
             'Copy Error To Clipboard'
           )
           .then(result => {

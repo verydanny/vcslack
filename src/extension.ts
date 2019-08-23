@@ -1,33 +1,18 @@
 import * as vscode from 'vscode'
 import { buildTeamData, sendData } from './api'
+import {
+  legacyTokenError,
+  legacyTokenHelpfulError,
+  noOpenDocumentError
+} from './const'
 import { Team } from './types/vcslack'
 
 export const activate = async (context: vscode.ExtensionContext) => {
   const config = vscode.workspace.getConfiguration('vcslack')
   const tokens: string[] | undefined = config.get('selfToken')
 
-  if (!tokens) {
-    vscode.window.showErrorMessage(
-      `VCSlack: You should probably add some Slack tokens!
-        1. Go to settings
-        2. Search for "vcslack"
-        3. Click edit in settings.json
-        4. Add VCSlack setting in following format:
-          "vcslack.selfToken": [
-            "xoxp-358484..."
-          ]`
-    )
-  } else if (Array.isArray(tokens) && tokens.length === 0) {
-    vscode.window.showErrorMessage(
-      `VCSlack: You should probably add some Slack tokens!
-        1. Go to settings
-        2. Search for "vcslack"
-        3. Click edit in settings.json
-        4. Add VCSlack setting in following format:
-          "vcslack.selfToken": [
-            "xoxp-358484...
-          ]`
-    )
+  if (!tokens || (Array.isArray(tokens) && tokens.length === 0)) {
+    vscode.window.showErrorMessage(legacyTokenHelpfulError)
   } else {
     context.globalState.update('tokens', tokens)
     context.globalState.update('teams', await buildTeamData([...tokens]))
@@ -42,39 +27,33 @@ export const activate = async (context: vscode.ExtensionContext) => {
 }
 
 const reloadConfig = async (context: vscode.ExtensionContext) => {
-  const NEW_CONFIG: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(
+  const newConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration(
     'vcslack'
   )
-  const NEW_TOKENS: string[] | undefined = NEW_CONFIG.get('selfToken')
+  const newTokens: string[] | undefined = newConfig.get('selfToken')
 
-  if (!NEW_TOKENS) {
-    vscode.window.showErrorMessage(
-      'VCSlack: Please add a Slack legacy token before proceeding'
-    )
+  if (!newTokens || (Array.isArray(newTokens) && newTokens.length === 0)) {
+    vscode.window.showErrorMessage(legacyTokenError)
   } else {
-    context.globalState.update('tokens', NEW_TOKENS)
-    context.globalState.update('teams', await buildTeamData([...NEW_TOKENS]))
+    context.globalState.update('tokens', newTokens)
+    context.globalState.update('teams', await buildTeamData([...newTokens]))
   }
 }
 
 const selectTeam = async (context: vscode.ExtensionContext) => {
   if (typeof vscode.window.activeTextEditor === 'undefined') {
-    return vscode.window.showErrorMessage(
-      "Can't send snippet with no open code document!"
-    )
+    return vscode.window.showErrorMessage(noOpenDocumentError)
   }
 
   const tokens = context.globalState.get('tokens') as string[]
   const teams = context.globalState.get('teams') as Team[]
   const options = {
     placeHolder: 'Which team/user would you like to send a snippet to?',
-    ignoreFocusOut: false
+    ignoreFocusOut: true
   }
 
-  if (!tokens) {
-    return vscode.window.showErrorMessage(
-      'VCSlack: Please add a Slack legacy token before proceeding'
-    )
+  if (!tokens || (Array.isArray(tokens) && tokens.length === 0)) {
+    return vscode.window.showErrorMessage(legacyTokenError)
   }
 
   if (teams && teams.length > 0) {
@@ -124,9 +103,10 @@ const selectChannel = async (
 
     if (matchingTeam && matchingTeam.channelList) {
       const channelList = matchingTeam.channelList.map(
-        ({ label, description, id }) => ({
+        ({ label, description, id, detail }) => ({
           label: label ? label : 'Unknown',
           description,
+          detail,
           id
         })
       )
@@ -134,7 +114,9 @@ const selectChannel = async (
       return vscode.window
         .showQuickPick(channelList, {
           matchOnDescription: true,
-          placeHolder: 'Please select a Slack channel'
+          matchOnDetail: true,
+          ignoreFocusOut: true,
+          placeHolder: 'Please select a Slack channel, group, or user'
         })
         .then(
           matchingChannel =>

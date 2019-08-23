@@ -10,21 +10,28 @@ export type DataT = {
 export type Channel = {
   id: string
   name: string
+  purpose?: {
+    value?: string
+  }
 }
 
 export type Member = {
   id: string
   name: string
-  profile: {
-    real_name: string
+  profile?: {
+    real_name?: string
   }
+  real_name?: string
 }
 
 export type Group = {
   id: string
   name: string
-  topic: {
-    value: string
+  topic?: {
+    value?: string
+  }
+  purpose?: {
+    value?: string
   }
 }
 
@@ -32,6 +39,7 @@ export interface ChannelList {
   id?: string
   label?: string
   description?: string
+  detail?: string
 }
 
 export interface Team {
