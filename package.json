@@ -55,10 +55,6 @@
       "properties": {
         "vcslack.selfToken": {
           "type": "array",
-          "default": [
-            "your slack token 1",
-            "your slack token 2"
-          ],
           "description": "Specify the tokens of your slack team"
         }
       }

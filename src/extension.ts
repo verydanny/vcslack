@@ -8,7 +8,25 @@ export const activate = async (context: vscode.ExtensionContext) => {
 
   if (!tokens) {
     vscode.window.showErrorMessage(
-      'VCSlack: You should probably add some Slack tokens!'
+      `VCSlack: You should probably add some Slack tokens!
+        1. Go to settings
+        2. Search for "vcslack"
+        3. Click edit in settings.json
+        4. Add VCSlack setting in following format:
+          "vcslack.selfToken": [
+            "xoxp-358484..."
+          ]`
+    )
+  } else if (Array.isArray(tokens) && tokens.length === 0) {
+    vscode.window.showErrorMessage(
+      `VCSlack: You should probably add some Slack tokens!
+        1. Go to settings
+        2. Search for "vcslack"
+        3. Click edit in settings.json
+        4. Add VCSlack setting in following format:
+          "vcslack.selfToken": [
+            "xoxp-358484...
+          ]`
     )
   } else {
     context.globalState.update('tokens', tokens)
