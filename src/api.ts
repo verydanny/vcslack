@@ -55,39 +55,47 @@ const organizeUserInfo = (data: any) => {
     if (data && data.channels) {
       return data.channels.map((channel: Channel) => ({
         id: channel.id,
-        label: 'channel:',
+        label: `#${channel.name}`,
         detail:
           channel.purpose && channel.purpose.value ? channel.purpose.value : '',
-        description: `#${channel.name}`
+        description: ''
       }))
     }
 
     if (data.members) {
       return data.members.map((member: Member) => ({
         id: member.id,
-        label: 'user:',
-        detail:
+        label: `@${member.name}`,
+        detail: '',
+        description:
           member.profile && member.profile.real_name
             ? member.profile.real_name
             : member.real_name
             ? member.real_name
-            : member.name,
-        description: `@${member.name}`
+            : member.name
       }))
     }
 
     if (data.groups) {
-      return data.groups.map((group: Group) => ({
-        id: group.id,
-        label: 'group:',
-        detail:
-          group.purpose && group.purpose.value
-            ? group.purpose.value
-            : group.topic && group.topic.value
-            ? group.topic.value
-            : group.name,
-        description: `#${group.name}`
-      }))
+      return data.groups.map((group: Group) => {
+        if (group.purpose && group.purpose.value) {
+          const groupPurpose = group.purpose.value.substr(22)
+
+          return {
+            id: group.id,
+            label: `Group Messaging:`,
+            detail: '',
+            description: `${groupPurpose}`
+          }
+        }
+
+        return {
+          id: group.id,
+          label: `Group Messaging:`,
+          detail: '',
+          description: `${group.name}`
+        }
+      })
     }
   }
 }
@@ -108,7 +116,7 @@ export const getPostList = async ({
     name,
     token,
     channelList: (await Promise.all(
-      [channels, groups, users].map(
+      [channels, users, groups].map(
         async url =>
           await phin({
             url,

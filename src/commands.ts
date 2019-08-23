@@ -91,7 +91,7 @@ const selectChannel = async (
       return vscode.window
         .showQuickPick(channelList, {
           matchOnDescription: true,
-          matchOnDetail: true,
+          matchOnDetail: false,
           ignoreFocusOut: true,
           placeHolder: 'Please select a Slack channel, group, or user'
         })
