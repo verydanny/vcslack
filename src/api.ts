@@ -174,6 +174,7 @@ export const sendData = async (
     document
   )
   const url = SLACK_API.post + SLACK_API.fileUpload
+  const lineNum = selection.start.line + 1
   const data: DataT = {
     token,
     channels,
@@ -181,8 +182,8 @@ export const sendData = async (
     filename: filedetails.cleanedFilename,
     filetype: filedetails.slackCompatible,
     title: filedetails.path
-      ? `${filedetails.path} sent from VCSlack`
-      : `${filedetails.cleanedFilename} sent from VCSlack`
+      ? `${filedetails.path}:${lineNum} sent from VCSlack`
+      : `${filedetails.cleanedFilename}:${lineNum} sent from VCSlack`
   }
 
   return phin({
