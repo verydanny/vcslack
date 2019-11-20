@@ -61,7 +61,7 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "rm -r lib && yarn webpack --mode production",
+    "vscode:prepublish": "rm -rf lib && yarn webpack --mode production",
     "test-compile": "rm -r lib && tsc -p ./",
     "watch": "rm -r lib && tsc -watch -p ./",
     "webpack-prod": "rm -r lib && webpack --mode production",
