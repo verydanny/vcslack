@@ -2,7 +2,7 @@
   "name": "vcslack",
   "displayName": "VCSlack",
   "description": "send snippet or text to slack",
-  "version": "2.5.5",
+  "version": "2.5.6",
   "publisher": "verydanny",
   "homepage": "https://github.com/verydanny/vcslack/blob/master/README.md",
   "repository": {
