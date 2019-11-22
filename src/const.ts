@@ -45,7 +45,7 @@ export const filetypeMap: SlackFileTypes = {
     slackCompatible: 'jsx'
   },
   typescriptreact: {
-    slackCompatible: 'tsx', // @TODO: Slack has horrible support for TSX, JSX works for now though
+    slackCompatible: 'JSX', // @TODO: Slack has horrible support for TSX, JSX works for now though
     actual: 'tsx'
   },
   auto: {
