@@ -40,9 +40,9 @@ export const fetchTeams = async (token: string) => {
     .then(res => res.body)
     .catch(e => vscode.window.showErrorMessage(e))
 
-  if (data && data.team && data.team.name) {
+  if (data && (data as any).team && (data as any).team.name) {
     return {
-      name: data.team.name,
+      name: (data as any).team.name,
       token: token
     }
   }
